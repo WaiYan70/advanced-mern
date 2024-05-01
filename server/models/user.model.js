@@ -22,6 +22,7 @@ const userSchema = mongoose.Schema(
     }
 );
 
+// Before saving the password into the database, it needs to hash with using bcrypt
 userSchema.pre('save', async function(next){
     if(!this.isModified('password')){
         next();
@@ -29,6 +30,11 @@ userSchema.pre('save', async function(next){
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
 });
+
+// Matching Password
+userSchema.methods.matchPassword = async function(enteredPassword){
+    return await bcrypt.compare(enteredPassword, this.password);
+};
 
 const User = mongoose.model('User', userSchema);
 

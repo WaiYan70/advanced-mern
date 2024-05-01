@@ -2,18 +2,36 @@ import asyncHandler from 'express-async-handler';
 import User from '../models/user.model.js';
 import generateToken from '../utils/generateToken.js';
 
-// @description     Auth user / set token
-// route            POST method /api/user/auth
-// @access          public access because it is accessible to anyone in which means the users are logged or not, 
+/* 
+    @description     LogIn/Auth user / set token
+    route            POST method /api/user/auth
+    @access          public access 
+*/
+// because it is accessible to anyone in which means the users are logged or not, 
 const authUser = asyncHandler( async(req, res) => {
-    res.status(200).json({message: 'Auth User'});
+    // Email and Password are needed to valide for authentication/LogIn
+    const { email , password } = req.body;
+    const user = await User.findOne({email});
+    if(user && (await user.matchPassword(password))){
+        generateToken(res, user._id);
+        res.status(201).json({
+            _id : user._id,
+            name : user.name,
+            email : user.email,
+        });
+    } else {
+        res.status(404);
+        throw new Error('Invalid Email or Password');
+    }
 });
 
-// @description     Register user / set token
-// route            POST method /api/user
-// @access          Public access
-// Register Controller must be created first because there is no user to try authenticate.
-// And also, when user registered, it's going to authenticate
+/* 
+    @description     Register user / set token
+    route            POST method /api/user
+    @access          Public access 
+*/
+// First, Register Controller need to be created because there is no user to authenticate or log in.
+// And also, when user registered, it's going to authenticate/ login
 const registerUser = asyncHandler( async(req, res) => {
     const { name, email, password } = req.body;
     const userExist = await User.findOne({email});
@@ -27,33 +45,43 @@ const registerUser = asyncHandler( async(req, res) => {
         res.status(201).json({
             _id : user._id,
             name : user.name,
-            email : user.email,
+            email : user.email,     
         });
     } else {
         res.status(400);
         throw new Error('Invalid user data');
     }
-    // before saving the password, it needs to hash with using bcrypt
 });
 
-// @description     LogOut user
-// route            POST method /api/user/logout
-// @access          Public access
+/*  
+    @description     LogOut user
+    route            POST method /api/user/logout
+    @access          Public access 
+*/
+// After the LogOut, it needs to destroy the cookie
 const logoutUser = asyncHandler( async(req, res) => {
-    res.status(200).json({ message : 'Logout User'});
+    res.cookie('jwt', '', {
+        httpOnly: true,
+        expires : new Date(0), 
+    });
+    res.status(200).json({ message : 'User Logout User'});
 })
 
-// @description     Get User Profile
-// route            Get Method /api/users/profile
-// @access          Private access
+/*
+    @description     Get User Profile
+    route            Get Method /api/users/profile
+    @access          Private access
+*/
 const getUserProfile = asyncHandler( async(req, res) => {
     res.status(200).json({ message : 'User Profile'});
 });
 
-// @description     Update User Profile 
-// route            PUT Method /api/users/profile
-// @access          Private access
-const updateUserProfile = asyncHandler( async(req, res) => {
+/*  
+    @description     Update User Profile 
+    route            PUT Method /api/users/profile
+    @access          Private access
+*/
+ const updateUserProfile = asyncHandler( async(req, res) => {
     res.status(200).json({ message : 'Update User Profile'});
 });
 
