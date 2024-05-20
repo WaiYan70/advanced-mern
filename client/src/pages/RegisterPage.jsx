@@ -1,17 +1,44 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { Form, Button, Row, Col } from 'react-bootstrap';
 import FormContainer from '../components/FormContainer';
+import { useDispatch, useSelector } from 'react-redux';
+import { useRegisterMutation } from '../slices/userApiSlice';
+import { setCredential } from '../slices/authSlice';
+import { toast } from 'react-toastify';
+import Loader from "../components/Loader";
 
 const RegisterPage = () => {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
-  
+
+    const navigate = useNavigate();
+    const dispatch = useDispatch();
+
+    const [register, { isLoading }] = useRegisterMutation();
+    const { userInfo } = useSelector((state) => state.auth);
+
+    useEffect(() => {
+      if(userInfo){
+         navigate('/'); 
+      }
+    },[navigate, userInfo]); 
+
     const submitHandler = async (e) => {
       e.preventDefault();
-      console.log('submit');
+      if (password !== confirmPassword) {
+        toast.error('Password do not match');
+      } else{
+        try {
+          const res = await register({name, email, password}).unwrap();
+          dispatch(setCredential({...res}));
+          navigate('/')
+        } catch (err) {
+            toast.error(err?.data?.message || err.error);
+        }
+      }
     };
   
     return (
@@ -57,6 +84,8 @@ const RegisterPage = () => {
             ></Form.Control>
           </Form.Group>
   
+          {isLoading && <Loader />}
+
           <Button type='submit' variant='primary' className='mt-3'>
             Register
           </Button>

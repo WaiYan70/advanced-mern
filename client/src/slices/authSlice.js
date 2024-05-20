@@ -1,8 +1,9 @@
+// This file process the data and JWT in local storage and cookie
 import { createSlice } from "@reduxjs/toolkit";
 
 // to check local storage 
 const initialState = {
-    userInfo: localStorage.getItem('userInfo') ? JSON.parse(localStorage.getItem) : null
+    userInfo: localStorage.getItem('userInfo') ? JSON.parse(localStorage.getItem('userInfo')) : null
 };
 
 /* 
@@ -20,7 +21,7 @@ const authSlice = createSlice({
         },
         logout: (state) => {
             state.userInfo = null;
-            localStorage.removeItem('useInfo');
+            localStorage.removeItem('userInfo');
         }
     }
 })
